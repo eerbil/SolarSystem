@@ -12,12 +12,17 @@ uniform vec4 LightPosition1;
 uniform float Shininess;
 uniform float Distance;
 uniform float Sun;
+uniform float Star;
 
 void main()
 {
     if(Sun==1){
         fragColor = color;
-    } else {
+    }
+    else if(Star==1){
+        fragColor = color;
+    }
+    else {
         // Normalize the input lighting vectors
         vec3 N = normalize(fN);
         vec3 V = normalize(fV);

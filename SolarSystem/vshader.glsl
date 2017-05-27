@@ -2,6 +2,7 @@
 in vec4 vPosition;
 in vec3 vNormal;
 uniform vec4 Color;
+uniform vec4 StarColor;
 out vec4 color;
 out vec3 fN;
 out vec3 fV;
@@ -16,13 +17,18 @@ uniform vec4 LightPosition1;
 uniform float Shininess;
 uniform float Distance;
 uniform float Sun;
+uniform float Star;
 
 void main()
 {
     if(Sun == 1){
         gl_Position = Projection * ModelView * vPosition;
         color = Color;
-    } else {
+    } else if (Star == 1){
+        gl_Position = Projection * ModelView * vPosition;
+        color = StarColor;
+    }
+    else {
         fN = (GlobalModelView * vec4(vNormal, 0.0)).xyz; // normal direction in camera coordinates
         
         fV = (GlobalModelView * vPosition).xyz; //viewer direction in camera coordinates

@@ -7,6 +7,15 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		AE417CCD1ED97FD900CA7039 /* earth.ppm in CopyFiles */ = {isa = PBXBuildFile; fileRef = AE417CC41ED97FD900CA7039 /* earth.ppm */; };
+		AE417CCE1ED97FD900CA7039 /* jupiter.ppm in CopyFiles */ = {isa = PBXBuildFile; fileRef = AE417CC51ED97FD900CA7039 /* jupiter.ppm */; };
+		AE417CCF1ED97FD900CA7039 /* mars.ppm in CopyFiles */ = {isa = PBXBuildFile; fileRef = AE417CC61ED97FD900CA7039 /* mars.ppm */; };
+		AE417CD01ED97FD900CA7039 /* mercury.ppm in CopyFiles */ = {isa = PBXBuildFile; fileRef = AE417CC71ED97FD900CA7039 /* mercury.ppm */; };
+		AE417CD11ED97FD900CA7039 /* neptune.ppm in CopyFiles */ = {isa = PBXBuildFile; fileRef = AE417CC81ED97FD900CA7039 /* neptune.ppm */; };
+		AE417CD21ED97FD900CA7039 /* saturn.ppm in CopyFiles */ = {isa = PBXBuildFile; fileRef = AE417CC91ED97FD900CA7039 /* saturn.ppm */; };
+		AE417CD31ED97FD900CA7039 /* sun.ppm in CopyFiles */ = {isa = PBXBuildFile; fileRef = AE417CCA1ED97FD900CA7039 /* sun.ppm */; };
+		AE417CD41ED97FD900CA7039 /* uranus.ppm in CopyFiles */ = {isa = PBXBuildFile; fileRef = AE417CCB1ED97FD900CA7039 /* uranus.ppm */; };
+		AE417CD51ED97FD900CA7039 /* venus.ppm in CopyFiles */ = {isa = PBXBuildFile; fileRef = AE417CCC1ED97FD900CA7039 /* venus.ppm */; };
 		AEC361161ECB0375009D8D8C /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AEC361151ECB0375009D8D8C /* main.cpp */; };
 		AEC3611E1ECB0472009D8D8C /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AEC3611D1ECB0472009D8D8C /* OpenGL.framework */; };
 		AEC361201ECB0477009D8D8C /* GLUT.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AEC3611F1ECB0477009D8D8C /* GLUT.framework */; };
@@ -21,11 +30,29 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		AE417CC31ED97FC800CA7039 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 7;
+			files = (
+				AE417CCD1ED97FD900CA7039 /* earth.ppm in CopyFiles */,
+				AE417CCE1ED97FD900CA7039 /* jupiter.ppm in CopyFiles */,
+				AE417CCF1ED97FD900CA7039 /* mars.ppm in CopyFiles */,
+				AE417CD01ED97FD900CA7039 /* mercury.ppm in CopyFiles */,
+				AE417CD11ED97FD900CA7039 /* neptune.ppm in CopyFiles */,
+				AE417CD21ED97FD900CA7039 /* saturn.ppm in CopyFiles */,
+				AE417CD31ED97FD900CA7039 /* sun.ppm in CopyFiles */,
+				AE417CD41ED97FD900CA7039 /* uranus.ppm in CopyFiles */,
+				AE417CD51ED97FD900CA7039 /* venus.ppm in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		AEC361101ECB0375009D8D8C /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = /usr/share/man/man1/;
-			dstSubfolderSpec = 0;
+			dstPath = usr/share/man/man1;
+			dstSubfolderSpec = 7;
 			files = (
 				AEC361261ECB048D009D8D8C /* Angel.h in CopyFiles */,
 				AEC361271ECB048D009D8D8C /* CheckError.h in CopyFiles */,
@@ -49,6 +76,15 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		AE417CC41ED97FD900CA7039 /* earth.ppm */ = {isa = PBXFileReference; lastKnownFileType = text; path = earth.ppm; sourceTree = "<group>"; };
+		AE417CC51ED97FD900CA7039 /* jupiter.ppm */ = {isa = PBXFileReference; lastKnownFileType = text; path = jupiter.ppm; sourceTree = "<group>"; };
+		AE417CC61ED97FD900CA7039 /* mars.ppm */ = {isa = PBXFileReference; lastKnownFileType = text; path = mars.ppm; sourceTree = "<group>"; };
+		AE417CC71ED97FD900CA7039 /* mercury.ppm */ = {isa = PBXFileReference; lastKnownFileType = text; path = mercury.ppm; sourceTree = "<group>"; };
+		AE417CC81ED97FD900CA7039 /* neptune.ppm */ = {isa = PBXFileReference; lastKnownFileType = text; path = neptune.ppm; sourceTree = "<group>"; };
+		AE417CC91ED97FD900CA7039 /* saturn.ppm */ = {isa = PBXFileReference; lastKnownFileType = text; path = saturn.ppm; sourceTree = "<group>"; };
+		AE417CCA1ED97FD900CA7039 /* sun.ppm */ = {isa = PBXFileReference; lastKnownFileType = text; path = sun.ppm; sourceTree = "<group>"; };
+		AE417CCB1ED97FD900CA7039 /* uranus.ppm */ = {isa = PBXFileReference; lastKnownFileType = text; path = uranus.ppm; sourceTree = "<group>"; };
+		AE417CCC1ED97FD900CA7039 /* venus.ppm */ = {isa = PBXFileReference; lastKnownFileType = text; path = venus.ppm; sourceTree = "<group>"; };
 		AEC361121ECB0375009D8D8C /* SolarSystem */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = SolarSystem; sourceTree = BUILT_PRODUCTS_DIR; };
 		AEC361151ECB0375009D8D8C /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		AEC3611D1ECB0472009D8D8C /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
@@ -78,6 +114,15 @@
 		AEC361091ECB0375009D8D8C = {
 			isa = PBXGroup;
 			children = (
+				AE417CC41ED97FD900CA7039 /* earth.ppm */,
+				AE417CC51ED97FD900CA7039 /* jupiter.ppm */,
+				AE417CC61ED97FD900CA7039 /* mars.ppm */,
+				AE417CC71ED97FD900CA7039 /* mercury.ppm */,
+				AE417CC81ED97FD900CA7039 /* neptune.ppm */,
+				AE417CC91ED97FD900CA7039 /* saturn.ppm */,
+				AE417CCA1ED97FD900CA7039 /* sun.ppm */,
+				AE417CCB1ED97FD900CA7039 /* uranus.ppm */,
+				AE417CCC1ED97FD900CA7039 /* venus.ppm */,
 				AEC3612C1ECB04B3009D8D8C /* fshader.glsl */,
 				AEC3612D1ECB04B3009D8D8C /* vshader.glsl */,
 				AEC361211ECB048D009D8D8C /* Angel.h */,
@@ -127,6 +172,7 @@
 				AEC3610F1ECB0375009D8D8C /* Frameworks */,
 				AEC361101ECB0375009D8D8C /* CopyFiles */,
 				AEC3612B1ECB0493009D8D8C /* CopyFiles */,
+				AE417CC31ED97FC800CA7039 /* CopyFiles */,
 			);
 			buildRules = (
 			);
