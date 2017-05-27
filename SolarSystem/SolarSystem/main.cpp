@@ -36,15 +36,15 @@ float rotation[9] =
 {
     //TODO: kendi eksenlerinde eğimli olunca shading yanlış oluyor
     0,0,0,0,0,0,0,0,0
-//    0,
-//    0,
-//    177.36,
-//    23.45,
-//    25.19,
-//    3.13,
-//    26.73,
-//    97.77,
-//    28.32
+    /*0,
+    0,
+    177.36,
+    23.45,
+    25.19,
+    3.13,
+    26.73,
+    97.77,
+    28.32*/
 };
 
 float radius[9] =
@@ -144,10 +144,10 @@ const int NumTriangles = 4096;  // (4 faces)^(NumTimesToSubdivide + 1)
 const int SphereNumVertices = 3 * NumTriangles;
 const int NumNodes = 9;
 float currentColor = 0;
-GLuint textures[2];
+GLuint textures[9];
 GLubyte image[TextureSize][TextureSize][3];
 GLubyte image2[TextureSize][TextureSize][3];
-vec2 tex_coords[SphereNumVertices];
+vec3 tex_coords[SphereNumVertices];
 
 point4 SphereVertices[SphereNumVertices];
 point4 SphereColors[SphereNumVertices];
@@ -168,9 +168,6 @@ unit( const point4& p )
     return t;
 }
 
-int texX = 0;
-int texY = 0;
-
 void
 triangle( const point4& a, const point4& b, const point4& c )
 {
@@ -178,19 +175,14 @@ triangle( const point4& a, const point4& b, const point4& c )
     vec4 v = c - a;
     vec3 normal = normalize( cross(u, v) );
     SphereNormals[SphereIndex] = normal;  SphereVertices[SphereIndex] = a;
-    tex_coords[SphereIndex] = vec2(0, 0.0);
-    texY+=1;
-    if(texY==5) { texX ++; }
+    tex_coords[SphereIndex] = vec3(a.x, a.y, a.z);
     SphereIndex++;
     SphereNormals[SphereIndex] = normal;  SphereVertices[SphereIndex] = b;
-    tex_coords[SphereIndex] = vec2(0.5,1.0);
-    texY+=1;
-    if(texY==5) { texX ++; }
+    tex_coords[SphereIndex] = vec3(b.x, b.y, b.z);
     SphereIndex++;
     SphereNormals[SphereIndex] = normal;  SphereVertices[SphereIndex] = c;
-    tex_coords[SphereIndex] = vec2(1.0,1.0);
-    texY+=1;
-    if(texY==5) { texX ++; }
+    tex_coords[SphereIndex] = vec3(c.x, c.y, c.z);
+    
     SphereIndex++;
 }
 
@@ -226,6 +218,23 @@ tetrahedron( int count )
     divide_triangle( v[3], v[2], v[1], count );
     divide_triangle( v[0], v[3], v[1], count );
     divide_triangle( v[0], v[2], v[3], count );
+}
+
+point4 CircleVertices[180];
+void circle(int r)
+{
+    float theta = 0;
+    CircleVertices[0] = point4(r*cos(theta), r*sin(theta), 0.0, 1.0);
+    theta += 0.069778;
+    for(int i=1; i<89; i++){
+        CircleVertices[i] = point4(r*cos(theta), r*sin(theta), 0.0, 1.0);
+        std::cout << "cos" << cos(theta) << "sin" << sin(theta) << std::endl;
+        CircleVertices[i+1] = point4(r*cos(theta), r*sin(theta), 0.0, 1.0);
+        std::cout << "cos" << cos(theta) << "sin" << sin(theta) << std::endl;
+        theta += 0.069778;
+    }
+    CircleVertices[179] = point4(r*cos(theta), r*sin(theta), 0.0, 1.0);
+    std::cout << "cos" << cos(theta) << "sin" << sin(theta) << std::endl;
 }
 
 //----------------------------------------------------------------------------
@@ -307,11 +316,10 @@ sun_draw()
                      Scale( radius[Sun], radius[Sun], radius[Sun] ) );
     
     glUniformMatrix4fv( ModelView, 1, GL_TRUE, model_view * instance );
-    glUniform4f(Color, 0.8, 0.7, 0.0, 1.0);
+    glBindTexture( GL_TEXTURE_2D, textures[0] );
     glUniform1f(IsSun, 1);
     glUniform1f(IsStar, 0);
     glDrawArrays( GL_TRIANGLES, 0, SphereNumVertices );
-    
 }
 
 void
@@ -319,7 +327,7 @@ mercury_draw()
 {
     mat4 instance = ( RotateZ(rotation[Mercury]) *
                      Scale( radius[Mercury], radius[Mercury], radius[Mercury] ) );
-    
+    glBindTexture( GL_TEXTURE_2D, textures[1] );
     glUniformMatrix4fv( ModelView, 1, GL_TRUE, model_view * instance );
     glUniform1f(IsSun, 0);
     glUniform1f(IsStar, 0);
@@ -331,7 +339,7 @@ venus_draw()
 {
     mat4 instance = (  RotateZ(rotation[Venus]) *
                      Scale( radius[Venus], radius[Venus], radius[Venus] ) );
-    
+    glBindTexture( GL_TEXTURE_2D, textures[2] );
     glUniformMatrix4fv( ModelView, 1, GL_TRUE, model_view * instance );
     glUniform1f(IsSun, 0);
     glUniform1f(IsStar, 0);
@@ -343,7 +351,7 @@ earth_draw()
 {
     mat4 instance = ( RotateZ(rotation[Earth]) *
                      Scale( radius[Earth], radius[Earth], radius[Earth] ) );
-    
+    glBindTexture( GL_TEXTURE_2D, textures[3] );
     glUniformMatrix4fv( ModelView, 1, GL_TRUE, model_view * instance );
     glUniform1f(IsSun, 0);
     glUniform1f(IsStar, 0);
@@ -355,7 +363,7 @@ mars_draw()
 {
     mat4 instance = ( RotateZ(rotation[Mars]) *
                      Scale( radius[Mars], radius[Mars], radius[Mars] ) );
-    
+    glBindTexture( GL_TEXTURE_2D, textures[4] );
     glUniformMatrix4fv( ModelView, 1, GL_TRUE, model_view * instance );
     glUniform1f(IsSun, 0);
     glUniform1f(IsStar, 0);
@@ -367,7 +375,7 @@ jupiter_draw()
 {
     mat4 instance = ( RotateZ(rotation[Jupiter]) *
                      Scale( radius[Jupiter], radius[Jupiter], radius[Jupiter] ) );
-    
+    glBindTexture( GL_TEXTURE_2D, textures[5] );
     glUniformMatrix4fv( ModelView, 1, GL_TRUE, model_view * instance );
     glUniform1f(IsSun, 0);
     glUniform1f(IsStar, 0);
@@ -379,7 +387,7 @@ saturn_draw()
 {
     mat4 instance = ( RotateZ(rotation[Saturn]) *
                      Scale( radius[Saturn], radius[Saturn], radius[Saturn] ) );
-    
+    glBindTexture( GL_TEXTURE_2D, textures[6] );
     glUniformMatrix4fv( ModelView, 1, GL_TRUE, model_view * instance );
     glUniform1f(IsSun, 0);
     glUniform1f(IsStar, 0);
@@ -391,7 +399,7 @@ uranus_draw()
 {
     mat4 instance = ( RotateZ(rotation[Uranus]) *
                      Scale( radius[Uranus], radius[Uranus], radius[Uranus] ) );
-    
+    glBindTexture( GL_TEXTURE_2D, textures[7] );
     glUniformMatrix4fv( ModelView, 1, GL_TRUE, model_view * instance );
     glUniform1f(IsSun, 0);
     glUniform1f(IsStar, 0);
@@ -403,7 +411,7 @@ neptune_draw()
 {
     mat4 instance = ( RotateZ(rotation[Neptune]) *
                      Scale( radius[Neptune], radius[Neptune], radius[Neptune] ) );
-    
+    glBindTexture( GL_TEXTURE_2D, textures[8] );
     glUniformMatrix4fv( ModelView, 1, GL_TRUE, model_view * instance );
     glUniform1f(IsSun, 0);
     glUniform1f(IsStar, 0);
@@ -416,7 +424,6 @@ stars_draw()
     mat4 instance = (Scale( 0.01, 0.01, 0.01 ) );
     
     glUniformMatrix4fv( ModelView, 1, GL_TRUE, model_view * instance );
-    //glUniform4f(StarColor, 1.0, 1.0, 1.0, 1.0);
     glUniform1f(IsSun, 0);
     glUniform1f(IsStar, 1);
     glDrawArrays( GL_TRIANGLES, 0, SphereNumVertices );
@@ -499,6 +506,138 @@ void initStarNodes( void ) {
 
 //--------------------------------------------------------------------
 
+FILE *fd;
+int k, n, m, nm;
+char c;
+int i;
+char b[100];
+float s;
+int red, green, blue;
+int* images;
+GLubyte sun_texture[1024][512][3];
+GLubyte mercury_texture[1024][512][3];
+GLubyte venus_texture[1024][512][3];
+GLubyte earth_texture[1000][500][3];
+GLubyte mars_texture[1024][512][3];
+GLubyte jupiter_texture[1024][512][3];
+GLubyte saturn_texture[900][1800][3];
+GLubyte uranus_texture[1024][512][3];
+GLubyte neptune_texture[1024][512][3];
+
+void fillTextures(char* dir, GLubyte planet[1024][512][3])
+{
+    system ("ls");
+    fd = fopen(dir, "r");
+    fscanf(fd,"%[^\n] ",b);
+    if(b[0]!='P'|| b[1] != '3'){
+        printf("%s is not a PPM file!\n", b);
+        exit(0); }    printf("%s is a PPM file \n",b);
+    fscanf(fd, "%c",&c);
+    while(c == '#')
+    {
+        fscanf(fd, "%[^\n] ", b);
+        printf("%s\n",b);
+        fscanf(fd, "%c",&c);
+    }
+    ungetc(c,fd);
+    fscanf(fd, "%d %d %d", &n, &m, &k);
+    printf("%d rows %d columns max value= %d\n",n,m,k);
+    nm = n*m;
+    images = (int*)malloc(3*sizeof(GLuint)*nm);
+    for(i=nm;i>0;i--)
+    {
+        fscanf(fd,"%d %d %d",&red, &green, &blue );
+        images[3*nm-3*i]=red;
+        images[3*nm-3*i+1]=green;
+        images[3*nm-3*i+2]=blue;
+    }
+    int counter = 0;
+    for(i=0; i<n; i++){
+        for(int j=0; j<m; j++){
+            for(int k=0; k<3; k++){
+                planet[i][j][k] = images[counter];
+                counter++;
+            }
+        }
+    }
+}
+
+void fillTexturesEarth(char* dir, GLubyte planet[1000][500][3])
+{
+    system ("ls");
+    fd = fopen(dir, "r");
+    fscanf(fd,"%[^\n] ",b);
+    if(b[0]!='P'|| b[1] != '3'){
+        printf("%s is not a PPM file!\n", b);
+        exit(0); }    printf("%s is a PPM file \n",b);
+    fscanf(fd, "%c",&c);
+    while(c == '#')
+    {
+        fscanf(fd, "%[^\n] ", b);
+        printf("%s\n",b);
+        fscanf(fd, "%c",&c);
+    }
+    ungetc(c,fd);
+    fscanf(fd, "%d %d %d", &n, &m, &k);
+    printf("%d rows %d columns max value= %d\n",n,m,k);
+    nm = n*m;
+    images = (int*)malloc(3*sizeof(GLuint)*nm);
+    for(i=nm;i>0;i--)
+    {
+        fscanf(fd,"%d %d %d",&red, &green, &blue );
+        images[3*nm-3*i]=red;
+        images[3*nm-3*i+1]=green;
+        images[3*nm-3*i+2]=blue;
+    }
+    int counter = 0;
+    for(i=0; i<n; i++){
+        for(int j=0; j<m; j++){
+            for(int k=0; k<3; k++){
+                planet[i][j][k] = images[counter];
+                counter++;
+            }
+        }
+    }
+}
+
+void fillTexturesSaturn(char* dir, GLubyte planet[900][1800][3])
+{
+    system ("ls");
+    fd = fopen(dir, "r");
+    fscanf(fd,"%[^\n] ",b);
+    if(b[0]!='P'|| b[1] != '3'){
+        printf("%s is not a PPM file!\n", b);
+        exit(0); }    printf("%s is a PPM file \n",b);
+    fscanf(fd, "%c",&c);
+    while(c == '#')
+    {
+        fscanf(fd, "%[^\n] ", b);
+        printf("%s\n",b);
+        fscanf(fd, "%c",&c);
+    }
+    ungetc(c,fd);
+    fscanf(fd, "%d %d %d", &n, &m, &k);
+    printf("%d rows %d columns max value= %d\n",n,m,k);
+    nm = n*m;
+    images = (int*)malloc(3*sizeof(GLuint)*nm);
+    for(i=nm;i>0;i--)
+    {
+        fscanf(fd,"%d %d %d",&red, &green, &blue );
+        images[3*nm-3*i]=red;
+        images[3*nm-3*i+1]=green;
+        images[3*nm-3*i+2]=blue;
+    }
+    int counter = 0;
+    for(i=0; i<m; i++){
+        for(int j=0; j<n; j++){
+            for(int k=0; k<3; k++){
+                planet[i][j][k] = images[counter];
+                counter++;
+            }
+        }
+    }
+}
+
 // initialization is made according to the program mode
 void
 init()
@@ -508,31 +647,96 @@ init()
     
     initNodes();
     initStarNodes();
+    circle(1);
     traverse(&starnodes[0]);
     
     // Initialize texture objects
-    glGenTextures( 2, textures );
+    glGenTextures( 9, textures );
+    
     
     glBindTexture( GL_TEXTURE_2D, textures[0] );
-    glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, TextureSize, TextureSize, 0,
-                 GL_RGB, GL_UNSIGNED_BYTE, image );
+    glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, 1024, 512, 0,
+                 GL_RGB, GL_UNSIGNED_BYTE, sun_texture );
+    glGenerateMipmap(GL_TEXTURE_2D);
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST_MIPMAP_LINEAR); //try here different alternatives
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); //try here different alternatives
+    //set current texture
+    
+    glBindTexture( GL_TEXTURE_2D, textures[1] );
+    glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, 1024, 512, 0,
+                 GL_RGB, GL_UNSIGNED_BYTE, mercury_texture );
+    glGenerateMipmap(GL_TEXTURE_2D);
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST_MIPMAP_LINEAR); //try here different alternatives
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); //try here different alternatives
+    //set current texture
+    
+    glBindTexture( GL_TEXTURE_2D, textures[2] );
+    glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, 1024, 512, 0,
+                 GL_RGB, GL_UNSIGNED_BYTE, venus_texture );
+    glGenerateMipmap(GL_TEXTURE_2D);
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST_MIPMAP_LINEAR); //try here different alternatives
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); //try here different alternatives
+
+    glBindTexture( GL_TEXTURE_2D, textures[3] );
+    glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, 1000, 500, 0,
+                 GL_RGB, GL_UNSIGNED_BYTE, earth_texture );
+    glGenerateMipmap(GL_TEXTURE_2D);
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST_MIPMAP_LINEAR); //try here different alternatives
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); //try here different alternatives
+
+    glBindTexture( GL_TEXTURE_2D, textures[4] );
+    glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, 1024, 512, 0,
+                 GL_RGB, GL_UNSIGNED_BYTE, mars_texture );
+    glGenerateMipmap(GL_TEXTURE_2D);
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST_MIPMAP_LINEAR); //try here different alternatives
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); //try here different alternatives
+
+    glBindTexture( GL_TEXTURE_2D, textures[5] );
+    glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, 1024, 512, 0,
+                 GL_RGB, GL_UNSIGNED_BYTE, jupiter_texture );
     glGenerateMipmap(GL_TEXTURE_2D);
     glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
     glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
     glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST_MIPMAP_LINEAR); //try here different alternatives
     glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); //try here different alternatives
     
-    glBindTexture( GL_TEXTURE_2D, textures[1] );
-    glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, TextureSize, TextureSize, 0,
-                 GL_RGB, GL_UNSIGNED_BYTE, image2 );
-    //glGenerateMipmap(GL_TEXTURE_2D); // try also activating mipmaps for the second texture object
+    glBindTexture( GL_TEXTURE_2D, textures[6] );
+    glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, 900, 1800, 0,
+                 GL_RGB, GL_UNSIGNED_BYTE, saturn_texture );
+    glGenerateMipmap(GL_TEXTURE_2D);
     glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
     glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
-    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
-    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR );
-    
-    glBindTexture( GL_TEXTURE_2D, textures[0] ); //set current texture
-    
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST_MIPMAP_LINEAR); //try here different alternatives
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); //try here different alternatives
+
+    glBindTexture( GL_TEXTURE_2D, textures[7] );
+    glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, 1024, 512, 0,
+                 GL_RGB, GL_UNSIGNED_BYTE, uranus_texture );
+    glGenerateMipmap(GL_TEXTURE_2D);
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST_MIPMAP_LINEAR); //try here different alternatives
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); //try here different alternatives
+
+    glBindTexture( GL_TEXTURE_2D, textures[8] );
+    glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, 1024, 512, 0,
+                 GL_RGB, GL_UNSIGNED_BYTE, neptune_texture );
+    glGenerateMipmap(GL_TEXTURE_2D);
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST_MIPMAP_LINEAR); //try here different alternatives
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); //try here different alternatives
+
     // Create a vertex array object
     GLuint vao;
     glGenVertexArrays( 1, &vao );
@@ -547,7 +751,7 @@ init()
     glBufferSubData( GL_ARRAY_BUFFER, 0, sizeof(SphereVertices), SphereVertices );
     glBufferSubData( GL_ARRAY_BUFFER, sizeof(SphereVertices),
                     sizeof(SphereNormals), SphereNormals );
-     glBufferSubData( GL_ARRAY_BUFFER, sizeof(SphereVertices) + sizeof(SphereNormals), sizeof(tex_coords), tex_coords );
+    glBufferSubData( GL_ARRAY_BUFFER, sizeof(SphereVertices) + sizeof(SphereNormals), sizeof(tex_coords), tex_coords );
     
     // Load shaders and use the resulting shader program
     GLuint program = InitShader( "vshader.glsl", "fshader.glsl" );
@@ -566,7 +770,7 @@ init()
     
     GLuint vTexCoord = glGetAttribLocation( program, "vTexCoord" );
     glEnableVertexAttribArray( vTexCoord );
-    glVertexAttribPointer( vTexCoord, 2, GL_FLOAT, GL_FALSE, 0,
+    glVertexAttribPointer( vTexCoord, 3, GL_FLOAT, GL_FALSE, 0,
                           BUFFER_OFFSET(sizeof(SphereVertices) + sizeof(SphereNormals)) );
     
     // Light Source Properties
@@ -575,27 +779,17 @@ init()
     color4 light1_diffuse( 1.0, 1.0, 1.0, 1.0 ); // L_d
     color4 light1_specular( 1.0, 1.0, 1.0, 1.0 ); // L_s
     
-    // Light Source Properties
-    color4 material_ambient( 0.1, 0.7, 1.0, 1.0 ); // k_a
-    color4 material_diffuse( 0.0, 0.8, 1.0, 1.0 ); // k_d
-    color4 material_specular( 0.1, 0.7, 1.0, 1.0 ); // k_s
-    
-    color4 ambient_product1 = light1_ambient * material_ambient; // k_a * L_a
-    color4 diffuse_product1 = light1_diffuse * material_diffuse; // k_d * L_d
-    color4 specular_product1 = light1_specular * material_specular; // k_s * L_s
-    
     glUniform4fv( glGetUniformLocation(program, "AmbientProduct"),
-                 1, ambient_product1 );
+                 1, light1_ambient );
     glUniform4fv( glGetUniformLocation(program, "DiffuseProduct1"),
-                 1, diffuse_product1 );
+                 1, light1_diffuse );
     glUniform4fv( glGetUniformLocation(program, "SpecularProduct1"),
-                 1, specular_product1 );
-    
+                 1, light1_specular );
     glUniform4fv( glGetUniformLocation(program, "LightPosition1"),
                  1, light1_position );
     
     Shininess = glGetUniformLocation(program, "Shininess");
-    glUniform1f( Shininess, 5 );
+    glUniform1f( Shininess, 500 );
     IsSun = glGetUniformLocation(program, "Sun");
     IsStar = glGetUniformLocation(program, "Star");
     StarColor = glGetUniformLocation(program, "StarColor");
@@ -622,7 +816,7 @@ init()
     glUniformMatrix4fv( Projection, 1, GL_TRUE, projection );
     
     glEnable( GL_DEPTH_TEST );
-    glEnable(GL_CULL_FACE);
+    glEnable( GL_CULL_FACE );
     
     glClearColor( 0.0, 0.0, 0.0, 1.0 );
     
@@ -633,6 +827,7 @@ bool flag = false;
 void display( void )
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    //vaolar arasında geçerek objeleri render ettir
     traverse( &nodes[Sun] );
     traverse( &starnodes[0] );
     glutSwapBuffers();
@@ -664,7 +859,7 @@ idle( void )
         flag = false;
     }
     
-    else if (currentColor < 0.05)
+    else if (currentColor < 0.55)
     {
         flag = true;
     }
@@ -676,65 +871,6 @@ idle( void )
 //
 // creating and functioning menus
 //
-FILE *fd;
-int k, n, m, nm;
-char c;
-int i;
-char b[100];
-float s;
-int red, green, blue;
-int* images;
-GLubyte mercury_texture[1024][512][3];
-GLubyte venus_texture[1024][512][3];
-GLubyte earth_texture[1000][500][3];
-GLubyte mars_texture[1024][512][3];
-GLubyte jupiter_texture[1024][512][3];
-GLubyte saturn_texture[1800][900][3];
-GLubyte uranus_texture[1024][512][3];
-GLubyte neptune_texture[1024][512][3];
-
-void fillTextures(char* dir)
-{
-    system ("ls");
-    fd = fopen(dir, "r");
-    fscanf(fd,"%[^\n] ",b);
-    if(b[0]!='P'|| b[1] != '3'){
-        printf("%s is not a PPM file!\n", b);
-        exit(0); }    printf("%s is a PPM file \n",b);
-    fscanf(fd, "%c",&c);
-    while(c == '#')
-    {
-        fscanf(fd, "%[^\n] ", b);
-        printf("%s\n",b);
-        fscanf(fd, "%c",&c);
-    }
-    ungetc(c,fd);
-    fscanf(fd, "%d %d %d", &n, &m, &k);
-    printf("%d rows %d columns max value= %d\n",n,m,k);
-    nm = n*m;
-    images = (int*)malloc(3*sizeof(GLuint)*nm);
-    for(i=nm;i>0;i--)
-    {
-        fscanf(fd,"%d %d %d",&red, &green, &blue );
-        images[3*nm-3*i]=red;
-        images[3*nm-3*i+1]=green;
-        images[3*nm-3*i+2]=blue;
-    }
-    GLubyte tex_image[n][m][3];
-    int counter = 0;
-    for(i=0; i<n; i++){
-        for(int j=0; j<m; j++){
-            for(int k=0; k<3; k++){
-                tex_image[i][j][k] = images[counter];
-                counter++;
-            }
-        }
-    }
-    for(i=0; i<nm; i++){
-        std::cout <<" for i = " << i << " " << images[i] << std::endl;
-    }
-
-}
 
 void
 myMenu(int id)
@@ -851,16 +987,15 @@ main( int argc, char **argv )
     glutInitWindowSize( 800, 800 );
     glutCreateWindow( "Solar System" );
     
- /*   fillTextures("sun.ppm");
-    fillTextures("mercury.ppm");
-    fillTextures("venus.ppm");
-    fillTextures("earth.ppm");
-    fillTextures("mars.ppm");
-    fillTextures("jupiter.ppm");
-    fillTextures("saturn.ppm");
-    fillTextures("uranus.ppm");
-    fillTextures("neptune.ppm"); */
-    
+    fillTextures("sun.ppm", sun_texture);
+    fillTextures("mercury.ppm", mercury_texture);
+    fillTextures("venus.ppm", venus_texture);
+    fillTexturesEarth("earth.ppm", earth_texture);
+    fillTextures("mars.ppm", mars_texture);
+    fillTextures("jupiter.ppm", jupiter_texture);
+    fillTexturesSaturn("saturn.ppm", saturn_texture);
+    fillTextures("uranus.ppm",uranus_texture);
+    fillTextures("neptune.ppm", neptune_texture);
     init();
     
     glutDisplayFunc( display );
