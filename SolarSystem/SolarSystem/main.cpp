@@ -16,7 +16,6 @@ enum {
     Saturn = 6,
     Uranus = 7,
     Neptune = 8,
-    Star = 9
 };
 
 float distance[9] =
@@ -148,7 +147,7 @@ GLuint textures[9];
 GLubyte image[TextureSize][TextureSize][3];
 GLubyte image2[TextureSize][TextureSize][3];
 vec3 tex_coords[SphereNumVertices];
-GLuint vao[2];
+GLuint vao[3];
 
 point4 SphereVertices[SphereNumVertices];
 point4 SphereColors[SphereNumVertices];
@@ -305,8 +304,23 @@ struct Node {
 };
 
 Node nodes[NumNodes];
-Node starnodes[100];
 
+struct Star{
+    mat4 transform;
+    
+    Star() {}
+    
+    Star(mat4 const& m) : transform(m){
+        
+    }
+    
+    void render(){
+        glUniformMatrix4fv( ModelView, 1, GL_TRUE, transform );
+        glDrawArrays( GL_TRIANGLES, 0, NumVertices );
+    }
+};
+#define NUM_STARS 100
+Star stars[NUM_STARS];
 //----------------------------------------------------------------------------
 
 class MatrixStack {
@@ -347,7 +361,7 @@ traverse( Node* node )
     
     //mvstack.push( model_view );
     
-    model_view = general_model_view * node->transform;
+    model_view = node->transform;
     node->render();
     
     traverse( node->child );
@@ -357,6 +371,14 @@ traverse( Node* node )
     
     traverse( node->sibling );
     if ( node->sibling != NULL) { traverse( node->sibling ); }
+}
+
+void drawStars(){
+    glUniform1f(IsSun, 0);
+    glUniform1f(IsStar, 1);
+    for(int i = 0;i < NUM_STARS;i++){
+        stars[i].render();
+    }
 }
 
 //----------------------------------------------------------------------------
@@ -383,7 +405,6 @@ mercury_draw()
     glBindTexture( GL_TEXTURE_2D, textures[1] );
     glUniformMatrix4fv( ModelView, 1, GL_TRUE, model_view * instance );
     glUniform1f(IsSun, 0);
-    glUniform1f(IsStar, 0);
     glDrawArrays( GL_TRIANGLES, 0, SphereNumVertices );
 }
 
@@ -394,8 +415,6 @@ venus_draw()
                      Scale( radius[Venus], radius[Venus], radius[Venus] ) );
     glBindTexture( GL_TEXTURE_2D, textures[2] );
     glUniformMatrix4fv( ModelView, 1, GL_TRUE, model_view * instance );
-    glUniform1f(IsSun, 0);
-    glUniform1f(IsStar, 0);
     glDrawArrays( GL_TRIANGLES, 0, SphereNumVertices );
 }
 
@@ -406,8 +425,6 @@ earth_draw()
                      Scale( radius[Earth], radius[Earth], radius[Earth] ) );
     glBindTexture( GL_TEXTURE_2D, textures[3] );
     glUniformMatrix4fv( ModelView, 1, GL_TRUE, model_view * instance );
-    glUniform1f(IsSun, 0);
-    glUniform1f(IsStar, 0);
     glDrawArrays( GL_TRIANGLES, 0, SphereNumVertices );
 }
 
@@ -418,8 +435,6 @@ mars_draw()
                      Scale( radius[Mars], radius[Mars], radius[Mars] ) );
     glBindTexture( GL_TEXTURE_2D, textures[4] );
     glUniformMatrix4fv( ModelView, 1, GL_TRUE, model_view * instance );
-    glUniform1f(IsSun, 0);
-    glUniform1f(IsStar, 0);
     glDrawArrays( GL_TRIANGLES, 0, SphereNumVertices );
 }
 
@@ -430,8 +445,6 @@ jupiter_draw()
                      Scale( radius[Jupiter], radius[Jupiter], radius[Jupiter] ) );
     glBindTexture( GL_TEXTURE_2D, textures[5] );
     glUniformMatrix4fv( ModelView, 1, GL_TRUE, model_view * instance );
-    glUniform1f(IsSun, 0);
-    glUniform1f(IsStar, 0);
     glDrawArrays( GL_TRIANGLES, 0, SphereNumVertices );
 }
 
@@ -442,8 +455,6 @@ saturn_draw()
                      Scale( radius[Saturn], radius[Saturn], radius[Saturn] ) );
     glBindTexture( GL_TEXTURE_2D, textures[6] );
     glUniformMatrix4fv( ModelView, 1, GL_TRUE, model_view * instance );
-    glUniform1f(IsSun, 0);
-    glUniform1f(IsStar, 0);
     glDrawArrays( GL_TRIANGLES, 0, SphereNumVertices );
 }
 
@@ -454,8 +465,6 @@ uranus_draw()
                      Scale( radius[Uranus], radius[Uranus], radius[Uranus] ) );
     glBindTexture( GL_TEXTURE_2D, textures[7] );
     glUniformMatrix4fv( ModelView, 1, GL_TRUE, model_view * instance );
-    glUniform1f(IsSun, 0);
-    glUniform1f(IsStar, 0);
     glDrawArrays( GL_TRIANGLES, 0, SphereNumVertices );
 }
 
@@ -466,19 +475,7 @@ neptune_draw()
                      Scale( radius[Neptune], radius[Neptune], radius[Neptune] ) );
     glBindTexture( GL_TEXTURE_2D, textures[8] );
     glUniformMatrix4fv( ModelView, 1, GL_TRUE, model_view * instance );
-    glUniform1f(IsSun, 0);
-    glUniform1f(IsStar, 0);
     glDrawArrays( GL_TRIANGLES, 0, SphereNumVertices );
-}
-
-void
-stars_draw()
-{
-   // glBindVertexArray( vao[1] );
-    glUniformMatrix4fv( ModelView, 1, GL_TRUE, model_view );
-    glUniform1f(IsSun, 0);
-    glUniform1f(IsStar, 1);
-    glDrawArrays( GL_TRIANGLES, 0, NumVertices );
 }
 
 //--------------------------------------------------------------------
@@ -520,17 +517,12 @@ initNodes( void )
 void initStarNodes( void ) {
     mat4 m;
     
-    double starX = ((double)rand() / (double)(RAND_MAX));
-    double starY = ((double)rand() / (double)(RAND_MAX));
-    double starZ = ((double)rand() / (double)(RAND_MAX));
-    m = Translate( starX, starY, starZ );
-    starnodes[0] = Node( m, stars_draw, NULL, &starnodes[1] );
-    for(int i=1; i<20; i++){
+    for(int i=0; i<NUM_STARS; i++){
         double starX = ((double)rand() / (double)(RAND_MAX));
         double starY = ((double)rand() / (double)(RAND_MAX));
         double starZ = ((double)rand() / (double)(RAND_MAX));
         if(starX > 0.5){
-        m = Translate( -starX, starY, starZ );
+            m = Translate( -starX, starY, starZ );
         }
         if(starZ < 0.2){
             m = Translate( -starX, starY, starZ );
@@ -547,12 +539,7 @@ void initStarNodes( void ) {
         if(starY > 0.5){
             m = Translate( starX, starY, starZ );
         }
-        
-        if(i<19){
-            starnodes[i] = Node( m, stars_draw, &starnodes[i+1], NULL );
-        } else {
-            starnodes[i] = Node( m, stars_draw, NULL, NULL );
-        }
+        stars[i] = Star(m);
     }
 }
 
@@ -700,7 +687,6 @@ init()
 
     initNodes();
     initStarNodes();
-    traverse(&starnodes[0]);
     
     // Initialize texture objects
     glGenTextures( 9, textures );
@@ -794,7 +780,7 @@ init()
     GLuint program = InitShader( "vshader.glsl", "fshader.glsl" );
     glUseProgram( program );
     
-    glGenVertexArrays( 2, vao );
+    glGenVertexArrays( 3, vao );
     glBindVertexArray( vao[0] );
     
     // Create and initialize a buffer object
@@ -832,6 +818,15 @@ init()
     glBufferData( GL_ARRAY_BUFFER, sizeof(points),
                  NULL, GL_STATIC_DRAW );
     glBufferSubData( GL_ARRAY_BUFFER, 0, sizeof(points), points );
+    
+    glBindVertexArray( vao[2] );
+    // Create and initialize a buffer object
+    GLuint buffer3;
+    glGenBuffers( 1, &buffer3 );
+    glBindBuffer( GL_ARRAY_BUFFER, buffer3 );
+    glBufferData( GL_ARRAY_BUFFER, sizeof(CircleVertices),
+                 NULL, GL_STATIC_DRAW );
+    glBufferSubData( GL_ARRAY_BUFFER, 0, sizeof(CircleVertices), CircleVertices );
     
     // set up vertex arrays
     //GLuint vPosition = glGetAttribLocation( program, "vPosition" );
@@ -897,7 +892,7 @@ void display( void )
     glBindVertexArray( vao[0] );
     traverse( &nodes[Sun] );
     glBindVertexArray( vao[1] );
-    traverse( &starnodes[0] );
+    drawStars();
     glutSwapBuffers();
 }
 

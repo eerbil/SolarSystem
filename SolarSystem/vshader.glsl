@@ -25,10 +25,10 @@ uniform float Star;
 void main()
 {
     if(Sun == 1){
-        gl_Position = Projection * ModelView * vPosition;
+        gl_Position = Projection * GlobalModelView * ModelView * vPosition;
         texCoord = vTexCoord;
     } else if (Star == 1){
-        gl_Position = Projection * ModelView * vPosition;
+        gl_Position = Projection * GlobalModelView * ModelView * vPosition;
         color = StarColor;
     }
     else {
@@ -42,6 +42,6 @@ void main()
             fL1 = LightPosition1.xyz - fV;  //directional light source
         }
         texCoord = vTexCoord;
-        gl_Position = Projection * ModelView * vPosition;
+        gl_Position = Projection * GlobalModelView * ModelView * vPosition;
     }
 }
