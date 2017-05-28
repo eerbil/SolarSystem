@@ -269,24 +269,36 @@ colorcube()
     quad( 4, 5, 6, 7 );
     quad( 5, 4, 0, 1 );
 }
-
-point4 CircleVertices[91*2];
-void circle(float r)
-{
+#define CIRCLE_PRECISION 50
+const int RING_VERTEX_COUNT = 6*CIRCLE_PRECISION+3;
+point4 innerVertices[CIRCLE_PRECISION];
+point4 outerVertices[CIRCLE_PRECISION];
+point4 ringVertices[RING_VERTEX_COUNT];
+void ring(float innerR, float outerR){
+    
     float theta = 0;
-    CircleVertices[0] = point4(r,0,0,1);
-    std::cout << 0 << ": " << CircleVertices[0] << '\n';
-    for(int i=1; i<=90; i++){
-        CircleVertices[2*i-1] = point4(r*cos(theta), r*sin(theta), 0.0, 1.0);
-        std::cout << 2*i-1 << ": " << CircleVertices[2*i-1] << '\n';
-        CircleVertices[2*i] = CircleVertices[2*i-1];
-        std::cout << 2*i << ": " << CircleVertices[2*i] << '\n';
-        theta += 0.069778;
+    const float thetaIncr = M_PI * 2 / CIRCLE_PRECISION;
+    
+    for(int i=0; i<CIRCLE_PRECISION; i++){
+        innerVertices[i] = point4(innerR*cos(theta), innerR*sin(theta), 0.0, 1.0);
+        std:: cout << "inner " << i << ": " << innerVertices[i] << std::endl;
+        outerVertices[i] = point4(outerR*cos(theta+thetaIncr/2), outerR*sin(theta+thetaIncr/2), 0.0, 1.0);
+        std:: cout << "outer " << i << ": " << outerVertices[i] << std::endl;
+        theta += thetaIncr;
     }
-    CircleVertices[91*2-1] = CircleVertices[0];
-    std::cout << 91*2-1 << ": " << CircleVertices[91*2-1];
+    
+    for(int i=0; i< CIRCLE_PRECISION; i++){
+        ringVertices[6*i  ] = innerVertices[i];
+        ringVertices[6*i+1] = outerVertices[i];
+        ringVertices[6*i+2] = innerVertices[i+1];
+        ringVertices[6*i+3] = outerVertices[i+1];
+        ringVertices[6*i+4] = innerVertices[i+1];
+        ringVertices[6*i+5] = outerVertices[i];
+    }
+    ringVertices[CIRCLE_PRECISION*6 ] = innerVertices[0];
+    ringVertices[CIRCLE_PRECISION*6+1] = outerVertices[CIRCLE_PRECISION-1];
+    ringVertices[CIRCLE_PRECISION*6+2] = innerVertices[CIRCLE_PRECISION-1];
 }
-
 
 //----------------------------------------------------------------------------
 
@@ -456,6 +468,13 @@ saturn_draw()
     glBindTexture( GL_TEXTURE_2D, textures[6] );
     glUniformMatrix4fv( ModelView, 1, GL_TRUE, model_view * instance );
     glDrawArrays( GL_TRIANGLES, 0, SphereNumVertices );
+    glBindVertexArray( vao[2] );
+    glUniform1f(IsSun, 1);
+    glUniform1f(IsStar, 0);
+    glUniformMatrix4fv( ModelView, 1, GL_TRUE, model_view * instance );
+    glDrawArrays( GL_TRIANGLES, 0, RING_VERTEX_COUNT );
+    glBindVertexArray( vao[0] );
+    glUniform1f(IsStar, 0);
 }
 
 void
@@ -687,6 +706,7 @@ init()
 
     initNodes();
     initStarNodes();
+    ring(0.3,0.4);
     
     // Initialize texture objects
     glGenTextures( 9, textures );
@@ -824,9 +844,9 @@ init()
     GLuint buffer3;
     glGenBuffers( 1, &buffer3 );
     glBindBuffer( GL_ARRAY_BUFFER, buffer3 );
-    glBufferData( GL_ARRAY_BUFFER, sizeof(CircleVertices),
+    glBufferData( GL_ARRAY_BUFFER, sizeof(ringVertices),
                  NULL, GL_STATIC_DRAW );
-    glBufferSubData( GL_ARRAY_BUFFER, 0, sizeof(CircleVertices), CircleVertices );
+    glBufferSubData( GL_ARRAY_BUFFER, 0, sizeof(ringVertices), ringVertices );
     
     // set up vertex arrays
     //GLuint vPosition = glGetAttribLocation( program, "vPosition" );
