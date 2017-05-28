@@ -139,8 +139,8 @@ int Index = 0;
 //----------------------------------------------------------------------------
 const int TextureSize = 64;
 float programMode = 1;
-const int NumTimesToSubdivide = 5;
-const int NumTriangles = 4096;  // (4 faces)^(NumTimesToSubdivide + 1)
+const int NumTimesToSubdivide = 6;
+const int NumTriangles = 16384;  // (4 faces)^(NumTimesToSubdivide + 1)
 const int SphereNumVertices = 3 * NumTriangles;
 const int NumNodes = 9;
 float currentColor = 0;
@@ -148,6 +148,7 @@ GLuint textures[9];
 GLubyte image[TextureSize][TextureSize][3];
 GLubyte image2[TextureSize][TextureSize][3];
 vec3 tex_coords[SphereNumVertices];
+GLuint vao[2];
 
 point4 SphereVertices[SphereNumVertices];
 point4 SphereColors[SphereNumVertices];
@@ -182,7 +183,6 @@ triangle( const point4& a, const point4& b, const point4& c )
     SphereIndex++;
     SphereNormals[SphereIndex] = normal;  SphereVertices[SphereIndex] = c;
     tex_coords[SphereIndex] = vec3(c.x, c.y, c.z);
-    
     SphereIndex++;
 }
 
@@ -220,22 +220,74 @@ tetrahedron( int count )
     divide_triangle( v[0], v[2], v[3], count );
 }
 
-point4 CircleVertices[180];
-void circle(int r)
+const int NumVertices = 36; //(6 faces)(2 triangles/face)(3 vertices/triangle)
+
+point4 points[NumVertices];
+color4 colors[NumVertices];
+
+// Vertices of a unit cube centered at origin, sides aligned with axes
+point4 vertices[8] = {
+    point4( -0.001, -0.001,  0.001, 1.0 ),
+    point4( -0.001,  0.001,  0.001, 1.0 ),
+    point4(  0.001,  0.001,  0.001, 1.0 ),
+    point4(  0.001, -0.001,  0.001, 1.0 ),
+    point4( -0.001, -0.001, -0.001, 1.0 ),
+    point4( -0.001,  0.001, -0.001, 1.0 ),
+    point4(  0.001,  0.001, -0.001, 1.0 ),
+    point4(  0.001, -0.001, -0.001, 1.0 )
+};
+
+
+// Array of rotation angles (in degrees) for each coordinate axis
+//----------------------------------------------------------------------------
+
+// quad generates two triangles for each face and assigns colors
+//    to the vertices
+
+void
+quad( int a, int b, int c, int d )
+{
+    // Initialize colors
+    
+    points[Index] = vertices[a]; Index++;
+    points[Index] = vertices[b]; Index++;
+    points[Index] = vertices[c]; Index++;
+    points[Index] = vertices[a]; Index++;
+    points[Index] = vertices[c]; Index++;
+    points[Index] = vertices[d]; Index++;
+}
+
+//----------------------------------------------------------------------------
+
+// generate 12 triangles: 36 vertices and 36 colors
+void
+colorcube()
+{
+    quad( 1, 0, 3, 2 );
+    quad( 2, 3, 7, 6 );
+    quad( 3, 0, 4, 7 );
+    quad( 6, 5, 1, 2 );
+    quad( 4, 5, 6, 7 );
+    quad( 5, 4, 0, 1 );
+}
+
+point4 CircleVertices[91*2];
+void circle(float r)
 {
     float theta = 0;
-    CircleVertices[0] = point4(r*cos(theta), r*sin(theta), 0.0, 1.0);
-    theta += 0.069778;
-    for(int i=1; i<89; i++){
-        CircleVertices[i] = point4(r*cos(theta), r*sin(theta), 0.0, 1.0);
-        std::cout << "cos" << cos(theta) << "sin" << sin(theta) << std::endl;
-        CircleVertices[i+1] = point4(r*cos(theta), r*sin(theta), 0.0, 1.0);
-        std::cout << "cos" << cos(theta) << "sin" << sin(theta) << std::endl;
+    CircleVertices[0] = point4(r,0,0,1);
+    std::cout << 0 << ": " << CircleVertices[0] << '\n';
+    for(int i=1; i<=90; i++){
+        CircleVertices[2*i-1] = point4(r*cos(theta), r*sin(theta), 0.0, 1.0);
+        std::cout << 2*i-1 << ": " << CircleVertices[2*i-1] << '\n';
+        CircleVertices[2*i] = CircleVertices[2*i-1];
+        std::cout << 2*i << ": " << CircleVertices[2*i] << '\n';
         theta += 0.069778;
     }
-    CircleVertices[179] = point4(r*cos(theta), r*sin(theta), 0.0, 1.0);
-    std::cout << "cos" << cos(theta) << "sin" << sin(theta) << std::endl;
+    CircleVertices[91*2-1] = CircleVertices[0];
+    std::cout << 91*2-1 << ": " << CircleVertices[91*2-1];
 }
+
 
 //----------------------------------------------------------------------------
 
@@ -253,7 +305,7 @@ struct Node {
 };
 
 Node nodes[NumNodes];
-Node starnodes[10];
+Node starnodes[100];
 
 //----------------------------------------------------------------------------
 
@@ -293,7 +345,7 @@ traverse( Node* node )
 {
     if ( node == NULL ) { return; }
     
-    mvstack.push( model_view );
+    //mvstack.push( model_view );
     
     model_view = general_model_view * node->transform;
     node->render();
@@ -301,7 +353,7 @@ traverse( Node* node )
     traverse( node->child );
     if ( node->child != NULL) { traverse( node->child ); }
     
-    model_view = mvstack.pop();
+    //model_view = mvstack.pop();
     
     traverse( node->sibling );
     if ( node->sibling != NULL) { traverse( node->sibling ); }
@@ -312,6 +364,7 @@ traverse( Node* node )
 void
 sun_draw()
 {
+    glBindVertexArray( vao[0] );
     mat4 instance = ( RotateZ(rotation[Sun]) *
                      Scale( radius[Sun], radius[Sun], radius[Sun] ) );
     
@@ -421,12 +474,11 @@ neptune_draw()
 void
 stars_draw()
 {
-    mat4 instance = (Scale( 0.01, 0.01, 0.01 ) );
-    
-    glUniformMatrix4fv( ModelView, 1, GL_TRUE, model_view * instance );
+   // glBindVertexArray( vao[1] );
+    glUniformMatrix4fv( ModelView, 1, GL_TRUE, model_view );
     glUniform1f(IsSun, 0);
     glUniform1f(IsStar, 1);
-    glDrawArrays( GL_TRIANGLES, 0, SphereNumVertices );
+    glDrawArrays( GL_TRIANGLES, 0, NumVertices );
 }
 
 //--------------------------------------------------------------------
@@ -436,31 +488,31 @@ initNodes( void )
 {
     mat4 m;
     
-    m = Translate( distance[Sun], 0.0, 0.0 );
+    m = Translate( distance[Sun], 0.0, 0.0 )  * RotateX(-90);
     nodes[Sun] = Node( m, sun_draw, NULL, &nodes[Mercury] );
     
-    m = Translate( distance [Mercury], 0.0, 0.0 );
+    m = Translate( distance [Mercury], 0.0, 0.0 )  * RotateX(-90);
     nodes[Mercury] = Node( m, mercury_draw, &nodes[Venus], NULL );
     
-    m = Translate( distance[Venus], 0.0, 0.0 );
+    m = Translate( distance[Venus], 0.0, 0.0 )  * RotateX(-90);
     nodes[Venus] = Node( m, venus_draw, &nodes[Earth], NULL );
     
-    m = Translate( distance[Earth], 0.0, 0.0 );
+    m = Translate( distance[Earth], 0.0, 0.0 )  * RotateX(-90);
     nodes[Earth] = Node( m, earth_draw, &nodes[Mars], NULL );
     
-    m = Translate( distance[Mars], 0.0, 0.0 );
+    m = Translate( distance[Mars], 0.0, 0.0 )  * RotateX(-90);
     nodes[Mars] = Node( m, mars_draw, &nodes[Jupiter], NULL );
     
-    m = Translate( distance[Jupiter], 0.0, 0.0 );
+    m = Translate( distance[Jupiter], 0.0, 0.0 ) * RotateX(-90);
     nodes[Jupiter] = Node( m, jupiter_draw, &nodes[Saturn], NULL );
     
-    m = Translate( distance[Saturn], 0.0, 0.0 );
+    m = Translate( distance[Saturn], 0.0, 0.0 )  * RotateX(-90);
     nodes[Saturn] = Node( m, saturn_draw, &nodes[Uranus], NULL );
     
-    m = Translate( distance[Uranus], 0.0, 0.0 );
+    m = Translate( distance[Uranus], 0.0, 0.0 )  * RotateX(-90);
     nodes[Uranus] = Node( m, uranus_draw, &nodes[Neptune], NULL );
     
-    m = Translate( distance[Neptune], 0.0, 0.0 );
+    m = Translate( distance[Neptune], 0.0, 0.0 )  * RotateX(-90);
     nodes[Neptune] = Node( m, neptune_draw, NULL, NULL );
     
 }
@@ -473,7 +525,7 @@ void initStarNodes( void ) {
     double starZ = ((double)rand() / (double)(RAND_MAX));
     m = Translate( starX, starY, starZ );
     starnodes[0] = Node( m, stars_draw, NULL, &starnodes[1] );
-    for(int i=1; i<10; i++){
+    for(int i=1; i<20; i++){
         double starX = ((double)rand() / (double)(RAND_MAX));
         double starY = ((double)rand() / (double)(RAND_MAX));
         double starZ = ((double)rand() / (double)(RAND_MAX));
@@ -496,7 +548,7 @@ void initStarNodes( void ) {
             m = Translate( starX, starY, starZ );
         }
         
-        if(i<9){
+        if(i<19){
             starnodes[i] = Node( m, stars_draw, &starnodes[i+1], NULL );
         } else {
             starnodes[i] = Node( m, stars_draw, NULL, NULL );
@@ -644,15 +696,14 @@ init()
 {
     SphereIndex = 0;
     tetrahedron(NumTimesToSubdivide);
-    
+    colorcube();
+
     initNodes();
     initStarNodes();
-    circle(1);
     traverse(&starnodes[0]);
     
     // Initialize texture objects
     glGenTextures( 9, textures );
-    
     
     glBindTexture( GL_TEXTURE_2D, textures[0] );
     glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, 1024, 512, 0,
@@ -738,9 +789,13 @@ init()
     glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); //try here different alternatives
 
     // Create a vertex array object
-    GLuint vao;
-    glGenVertexArrays( 1, &vao );
-    glBindVertexArray( vao );
+    
+    // Load shaders and use the resulting shader program
+    GLuint program = InitShader( "vshader.glsl", "fshader.glsl" );
+    glUseProgram( program );
+    
+    glGenVertexArrays( 2, vao );
+    glBindVertexArray( vao[0] );
     
     // Create and initialize a buffer object
     GLuint buffer;
@@ -752,10 +807,6 @@ init()
     glBufferSubData( GL_ARRAY_BUFFER, sizeof(SphereVertices),
                     sizeof(SphereNormals), SphereNormals );
     glBufferSubData( GL_ARRAY_BUFFER, sizeof(SphereVertices) + sizeof(SphereNormals), sizeof(tex_coords), tex_coords );
-    
-    // Load shaders and use the resulting shader program
-    GLuint program = InitShader( "vshader.glsl", "fshader.glsl" );
-    glUseProgram( program );
     
     // set up vertex arrays
     GLuint vPosition = glGetAttribLocation( program, "vPosition" );
@@ -773,6 +824,21 @@ init()
     glVertexAttribPointer( vTexCoord, 3, GL_FLOAT, GL_FALSE, 0,
                           BUFFER_OFFSET(sizeof(SphereVertices) + sizeof(SphereNormals)) );
     
+    glBindVertexArray( vao[1] );
+    // Create and initialize a buffer object
+    GLuint buffer2;
+    glGenBuffers( 1, &buffer2 );
+    glBindBuffer( GL_ARRAY_BUFFER, buffer2 );
+    glBufferData( GL_ARRAY_BUFFER, sizeof(points),
+                 NULL, GL_STATIC_DRAW );
+    glBufferSubData( GL_ARRAY_BUFFER, 0, sizeof(points), points );
+    
+    // set up vertex arrays
+    //GLuint vPosition = glGetAttribLocation( program, "vPosition" );
+    glEnableVertexAttribArray( vPosition );
+    glVertexAttribPointer( vPosition, 4, GL_FLOAT, GL_FALSE, 0,
+                          BUFFER_OFFSET(0) );
+    
     // Light Source Properties
     point4 light1_position( -0.1, 0.0, 0.0, 0.0 );
     color4 light1_ambient( 1.0, 1.0, 1.0, 1.0 ); // L_a
@@ -789,7 +855,7 @@ init()
                  1, light1_position );
     
     Shininess = glGetUniformLocation(program, "Shininess");
-    glUniform1f( Shininess, 500 );
+    glUniform1f( Shininess, 2 );
     IsSun = glGetUniformLocation(program, "Sun");
     IsStar = glGetUniformLocation(program, "Star");
     StarColor = glGetUniformLocation(program, "StarColor");
@@ -828,7 +894,9 @@ void display( void )
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     //vaolar arasında geçerek objeleri render ettir
+    glBindVertexArray( vao[0] );
     traverse( &nodes[Sun] );
+    glBindVertexArray( vao[1] );
     traverse( &starnodes[0] );
     glutSwapBuffers();
 }
@@ -859,7 +927,7 @@ idle( void )
         flag = false;
     }
     
-    else if (currentColor < 0.55)
+    else if (currentColor < 0.05)
     {
         flag = true;
     }
@@ -875,13 +943,89 @@ idle( void )
 void
 myMenu(int id)
 {
-    
+    if(id==0){
+        initNodes();
+        speedFactor = 1;
+        glutPostRedisplay();
+    }
 }
+
+void
+infoMenu(int id)
+{
+    switch(id){
+        case Sun:
+            std::cout << "The Sun" << std::endl;
+            std::cout << "Diameter: " << std::endl;
+            break;
+        case Mercury:
+            std::cout << "Mercury" << std::endl;
+            std::cout <<"Diameter: 4,879 km "<< std::endl;
+            std::cout <<"Distance From the Sun: 57,909,227 km (0.39 AU) "<< std::endl;
+            std::cout <<"Orbit Period: 88 days "<< std::endl;
+            break;
+        case Venus:
+            std::cout <<"Venus" << std::endl;
+            std::cout <<"Diameter: 12,104 km" << std::endl;
+            std::cout <<"Distance From the Sun: 108,209,475 km (0.73 AU) "<< std::endl;
+            std::cout <<"Orbit Period: 225 days "<< std::endl;
+            break;
+        case Earth:
+            std::cout <<"Earth "<< std::endl;
+            std::cout <<"Diameter: 12,742 km "<< std::endl;
+            std::cout <<"Distance From the Sun: 149,598,262 km (1 AU) "<< std::endl;
+            std::cout <<"Orbit Period: 365.24 days "<< std::endl;
+            break;
+        case Mars:
+            std::cout <<"Mars" << std::endl;
+            std::cout <<"Diameter: 6,779 km "<< std::endl;
+            std::cout <<"Distance From the Sun: 227,943,824 km (1.38 AU) "<< std::endl;
+            std::cout <<"Orbit Period: 1.9 years "<< std::endl;
+            break;
+        case Jupiter:
+            std::cout <<"Jupiter" << std::endl;
+            std::cout <<"Diameter: 139,822 km "<< std::endl;
+            std::cout <<"Distance From the Sun: 778,340,821 km (5.20 AU) "<< std::endl;
+            std::cout <<"Orbit Period: 11.9 years "<< std::endl;
+            break;
+        case Saturn:
+            std::cout <<"Saturn" << std::endl;
+            std::cout <<"Diameter: 116,464 km" << std::endl;
+            std::cout <<"Distance From the Sun: 1,426,666,422 km (9.58 AU)" << std::endl;
+            std::cout <<"Orbit Period: 29.5 years" << std::endl;
+            break;
+        case Uranus:
+            std::cout <<"Uranus" << std::endl;
+            std::cout <<"Diameter: 50,724 km" << std::endl;
+            std::cout <<"Distance From the Sun: 2,870,658,186 km (19.22 AU)" << std::endl;
+            std::cout <<"Orbit Period: 84.0 years" << std::endl;
+            break;
+        case Neptune:
+            std::cout <<"Neptune" << std::endl;
+            std::cout <<"Diameter: 49,244 km" << std::endl;
+            std::cout <<"Distance From the Sun: 4,498,396,441 km (30.10 AU)" << std::endl;
+            std::cout <<"Orbit Period: 164.8 years" << std::endl;
+            break;
+    }
+}
+int cMenu;
 
 void
 createMenu()
 {
-    
+    cMenu = glutCreateMenu(infoMenu);
+    glutAddMenuEntry("Sun",Sun);
+    glutAddMenuEntry("Mercury",Mercury);
+    glutAddMenuEntry("Venus",Venus);
+    glutAddMenuEntry("Earth",Earth);
+    glutAddMenuEntry("Mars",Mars);
+    glutAddMenuEntry("Jupiter",Jupiter);
+    glutAddMenuEntry("Saturn",Saturn);
+    glutAddMenuEntry("Uranus",Uranus);
+    glutAddMenuEntry("Neptune",Neptune);
+    glutCreateMenu(myMenu);
+    glutAddMenuEntry("Restart", 0);
+    glutAddSubMenu("Information on Planets", cMenu);
 }
 
 //The distance of the point source is changed through a variable and sent through the shader formula.
@@ -929,40 +1073,50 @@ keyboard( unsigned char key, int x, int y )
             traverse( &nodes[Sun] );
             glutPostRedisplay();
             break;
-        case 'i':
-            initNodes();
-            glutPostRedisplay();
-            break;
         case 'o':
-            general_model_view = RotateZ(10) * general_model_view;
+            general_model_view = RotateX(10) * general_model_view;
             glUniformMatrix4fv( GlobalModelView, 1, GL_TRUE, general_model_view );
             traverse( &nodes[Sun] );
             glutPostRedisplay();
             break;
         case 'p':
-            general_model_view = RotateZ(-10) * general_model_view;
+            general_model_view = RotateX(-10) * general_model_view;
             glUniformMatrix4fv( GlobalModelView, 1, GL_TRUE, general_model_view );
             traverse( &nodes[Sun] );
             glutPostRedisplay();
             break;
-        case 'n':
-            speedFactor += 0.1;
-            glutPostRedisplay();
-            break;
-        case 'm':
-            speedFactor -= 0.1;
-            glutPostRedisplay();
-            break;
-        case 'c':
-            speedFactor += 3;
-            glutPostRedisplay();
-            break;
-        case 'v':
-            speedFactor = 1;
-            glutPostRedisplay();
-            break;
     }
 }
+
+void
+special( int key, int x, int y )
+{
+    if(key == GLUT_KEY_UP)
+    {
+        speedFactor += 1;
+        glutPostRedisplay();
+    }
+    
+    if(key == GLUT_KEY_DOWN)
+    {
+        speedFactor -= 1;
+        glutPostRedisplay();
+    }
+    
+    if(key == GLUT_KEY_RIGHT)
+    {
+        speedFactor = 5;
+        glutPostRedisplay();
+    }
+    
+    if(key == GLUT_KEY_LEFT)
+    {
+        speedFactor = 1;
+        glutPostRedisplay();
+    }
+
+}
+
 
 //----------------------------------------------------------------------------
 
@@ -996,12 +1150,13 @@ main( int argc, char **argv )
     fillTexturesSaturn("saturn.ppm", saturn_texture);
     fillTextures("uranus.ppm",uranus_texture);
     fillTextures("neptune.ppm", neptune_texture);
+    
     init();
     
     glutDisplayFunc( display );
     glutKeyboardFunc( keyboard );
     glutReshapeFunc( reshape );
-
+    glutSpecialFunc(special);
     glutIdleFunc( idle );
     createMenu();
     glutAttachMenu(GLUT_RIGHT_BUTTON);

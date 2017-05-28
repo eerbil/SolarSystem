@@ -20,15 +20,14 @@ uniform float Star;
 void main()
 {
     if(Sun==1){
-        vec2 textureC = vec2((atan(texCoord.x, texCoord.y) / 3.1415926 + 1.0) * 0.5, (asin(texCoord.z) / 3.1415926 + 0.5));
+        vec2 textureC = vec2((atan(texCoord.y, texCoord.x) / 3.1415926 + 1.0) * 0.5, (asin(texCoord.z) / 3.1415926 + 0.5));
         fragColor = texture( texture1, textureC );
-        fragColor.a = StarColor.x;
     }
     else if(Star==1){
         fragColor = color;
     }
     else {
-        vec2 textureC = vec2((atan(texCoord.x, texCoord.y) / 3.1415926 + 1.0) * 0.5, (asin(texCoord.z) / 3.1415926 + 0.5));
+        vec2 textureC = vec2((atan(texCoord.y, texCoord.x) / 3.1415926 + 1.0) * 0.5, (asin(texCoord.z) / 3.1415926 + 0.5));
         // Normalize the input lighting vectors
         vec3 N = normalize(fN);
         vec3 V = normalize(fV);

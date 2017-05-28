@@ -1,5 +1,6 @@
 #version 410
 in vec4 vPosition;
+in vec4 vSqPosition;
 in vec3 vNormal;
 in vec3 vTexCoord;
 
@@ -28,7 +29,7 @@ void main()
         texCoord = vTexCoord;
     } else if (Star == 1){
         gl_Position = Projection * ModelView * vPosition;
-        color = Color;
+        color = StarColor;
     }
     else {
         fN = (GlobalModelView * vec4(vNormal, 0.0)).xyz; // normal direction in camera coordinates
